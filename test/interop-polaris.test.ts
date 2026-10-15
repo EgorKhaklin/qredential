@@ -40,10 +40,11 @@ describe('a Polaris ID credential, our verifier', () => {
   // Polaris signs its status list token without an `iss` claim. draft-ietf-oauth-status-list-21,
   // section 5.1, lists the claims of a JWT Status List Token: "sub: REQUIRED", "iat: REQUIRED",
   // "exp: RECOMMENDED", "ttl: RECOMMENDED", "status_list: REQUIRED", and then "The JWT MAY contain
-  // other claims." Its own section 5.1 example token has no `iss` either. Section 11.3 binds the
-  // list to the credential by key: "the same x5c value or an x5t, x5t#S256 or kid parameter
-  // referencing to the same key as used in the Referenced Token". So a token without `iss` is valid
-  // under the draft; whether verify() should accept it, bound by key as section 11.3 describes, is
+  // other claims." Its own section 5.1 example token has no `iss` either. Section 11.3 (key
+  // resolution): when the credential's issuer is also the Status Issuer, the Status List Token "may
+  // use: the same x5c value or an x5t, x5t#S256 or kid parameter referencing to the same key as
+  // used in the Referenced Token". So a token without `iss` is valid under the draft; whether
+  // verify() should accept it, bound by key as section 11.3 describes, is
   // for the maintainer to decide; Polaris can also add `iss`, which the draft allows. This library
   // requires `iss`, so the as-issued token fails below. The other tests use statusListTokenWithIss:
   // the same token with `iss` added and re-signed.
