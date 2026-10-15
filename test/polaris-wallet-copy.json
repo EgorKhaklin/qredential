@@ -16,5 +16,12 @@
     "age_over_18": true,
     "age_over_21": true,
     "jurisdiction": "日本国 東京都"
+  },
+  "fieldNotes": {
+    "credential": "wallet_copy.build_copy() output, unmodified",
+    "statusListToken": "wallet_copy.status_list_token() output, unmodified (no iss claim)",
+    "statusListTokenWithIss": "derived: the statusListToken payload with iss added, re-signed by wallet_copy._jws with the same key",
+    "issuerPublicJwk": "public half of a throwaway ES256 key",
+    "expectedClaims": "the claims passed to build_copy()"
   }
 }

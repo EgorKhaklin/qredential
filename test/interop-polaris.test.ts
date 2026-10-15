@@ -37,11 +37,16 @@ async function run(credential: string, status: string = fixture.statusListTokenW
 }
 
 describe('a Polaris ID credential, our verifier', () => {
-  // Polaris signs its status list token without an \`iss\` claim, which draft-ietf-oauth-status-list
-  // (-15) does not require. This library requires it to bind the list to the issuer, so it refuses
-  // the token exactly as Polaris emits it. The tests below use the same token with \`iss\` added and
-  // re-signed (statusListTokenWithIss); this one is the as-issued token and is expected to fail until
-  // the two sides settle which is right.
+  // Polaris signs its status list token without an `iss` claim. draft-ietf-oauth-status-list-21,
+  // section 5.1, lists the claims of a JWT Status List Token: "sub: REQUIRED", "iat: REQUIRED",
+  // "exp: RECOMMENDED", "ttl: RECOMMENDED", "status_list: REQUIRED", and then "The JWT MAY contain
+  // other claims." Its own section 5.1 example token has no `iss` either. Section 11.3 binds the
+  // list to the credential by key: "the same x5c value or an x5t, x5t#S256 or kid parameter
+  // referencing to the same key as used in the Referenced Token". So a token without `iss` is valid
+  // under the draft; whether verify() should accept it, bound by key as section 11.3 describes, is
+  // for the maintainer to decide; Polaris can also add `iss`, which the draft allows. This library
+  // requires `iss`, so the as-issued token fails below. The other tests use statusListTokenWithIss:
+  // the same token with `iss` added and re-signed.
   it('verifies with the status list token exactly as Polaris issues it', async () => {
     const result = await run(fixture.credential, fixture.statusListToken)
     expect(result).toMatchObject({ ok: true })
@@ -61,5 +66,16 @@ describe('a Polaris ID credential, our verifier', () => {
         expect(got).toBe(expected)
       }
     }
+  })
+
+  // Negative control: the same credential with one signature character changed must be refused.
+  it('refuses the same credential with one byte of the signature changed', async () => {
+    const [jwt, ...rest] = fixture.credential.split('~')
+    const parts = jwt!.split('.')
+    const sig = parts[2]!
+    const flipped = (sig[10] === 'A' ? 'B' : 'A')
+    parts[2] = sig.slice(0, 10) + flipped + sig.slice(11)
+    const result = await run([parts.join('.'), ...rest].join('~'))
+    expect(result).toMatchObject({ ok: false, reason: 'bad_signature' })
   })
 })
